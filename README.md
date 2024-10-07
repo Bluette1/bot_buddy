@@ -109,6 +109,7 @@ Add BotBuddy to your Discord server using the invite link. Use commands to inter
 ## Contributing
 
 Contributions are welcome! Please fork the repository and submit a pull request.
+[User Stories](https://www.notion.so/BotBuddy-118e6a4d98f280f0ba0ec086577831b4?pvs=4)
 
 ## License
 
