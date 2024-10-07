@@ -1,49 +1,95 @@
-Here's an updated README for your BotBuddy project hosted at `https://github.com/Bluette1/bot_buddy`:
+# BotBuddy Discord Bot
 
-```markdown
-# BotBuddy
-
-## Description
-
-**BotBuddy** is a versatile Discord bot designed to assist users with coding inquiries, manage help requests, and foster engaging community interactions. Utilizing the capabilities of ChatGPT and MongoDB, BotBuddy can answer programming questions, maintain user profiles, and create a supportive environment for learning and collaboration.
+A versatile Discord bot designed to enhance server experiences with a variety of interactive features, built using Python and `discord.py`.
 
 ## Features
 
-- **User Profile Management:** Create and manage user profiles to store personal information and preferences.
-- **Interactive Help Requests:** Users can submit help requests, which can be prioritized and tagged for better organization.
-- **Code Assistance:** Ask coding questions and receive detailed explanations or code snippets from ChatGPT.
-- **Persistent Conversations:** Maintain context in conversations and retrieve previous interactions seamlessly.
-- **Fun Interactions:** Enjoy random jokes, quotes, and engaging content through simple commands.
-- **Admin Tools:** Admins can manage commands, view analytics, and schedule community events.
-- **Community Engagement:** Features like polls, mentorship programs, and user recognition to foster a vibrant community.
+1. **Bot Setup**
 
-## Installation
+   - Automate tasks within your environment with easy setup.
+
+2. **Command Integration**
+
+   - Process specific commands for efficient interaction.
+
+3. **Environment Configuration**
+
+   - Load environment variables for necessary settings.
+
+4. **ChatGPT Integration**
+
+   - Get intelligent responses to queries through ChatGPT.
+
+5. **Conversation History**
+
+   - Maintain context with stored conversation history.
+
+6. **Database Storage**
+
+   - Ensure persistent and easily retrievable data with database storage.
+
+7. **Welcome Message**
+
+   - Greet new members to make them feel welcomed.
+
+8. **Inspirational Quotes**
+
+   - Receive random quotes to boost motivation.
+
+9. **Support the Creator**
+
+   - Use the "Buy Me a Coffee" feature to support development.
+
+10. **New Year Celebration**
+
+    - Celebrate with a special message on New Year's Day.
+
+11. **Birthday Celebration**
+
+    - Receive a celebratory message on your birthday.
+
+12. **Task Reminders**
+
+    - Set reminders to manage tasks effectively.
+
+13. **Recurring Reminders**
+
+    - Set recurring reminders for consistent task management.
+
+14. **Command Usage**
+    - Use simple commands like `/ping` for straightforward communication.
+
+## Getting Started
 
 ### Prerequisites
 
-- [Python 3.8+](https://www.python.org/downloads/)
-- [MongoDB](https://www.mongodb.com/try/download/community) (local or cloud)
-- [Discord Bot Token](https://discord.com/developers/applications) (create an application and get your bot token)
-- [OpenAI API Key](https://platform.openai.com/signup) (for ChatGPT integration)
+- Python 3.8+
+- `discord.py` library
+- Discord account
 
-### Steps
+### Installation
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/Bluette1/bot_buddy.git
    cd bot_buddy
    ```
 
-2. Install required Python packages:
+2. Install dependencies:
+
    ```bash
    pip install -r requirements.txt
    ```
 
-3. Create a `.env` file in the root directory and add your environment variables:
+3. Set up your `.env` file with your Discord bot token:
+
    ```env
-   DISCORD_BOT_TOKEN=your_discord_bot_token
-   MONGODB_URI=your_mongodb_uri
-   OPENAI_API_KEY=your_openai_api_key
+   TOKEN=your_discord_bot_token
+   CLIENT_ID=the_discord_client_id
+   BOT_OWNER_ID=owner_discord_id
+   OPENAI_API_KEY=your_open_ai_api_key
+   BOT_ID=bot_id
    ```
 
 4. Run the bot:
@@ -53,45 +99,26 @@ Here's an updated README for your BotBuddy project hosted at `https://github.com
 
 ## Usage
 
-- Use `!ask` to start a conversation with ChatGPT.
-- Manage your profile with `!profile`.
-- Submit help requests using `!help`.
-- Get coding assistance with `!code [your question]`.
+Add BotBuddy to your Discord server using the invite link. Use commands to interact with the bot, such as:
 
-For a full list of commands, use `!commands` to display available commands and their descriptions.
+- `/ping`: Responds with "pong".
+- `/quote`: Receive an inspirational quote.
+- `!remind [task] at [24_hr_format_time]`: Set a reminder for a task.
+- `!birthday [Month] [Day]`: Get a birthday message.
 
 ## Contributing
 
-We welcome contributions! Please follow these steps to contribute to BotBuddy:
-
-1. Fork the repository.
-2. Create a new branch for your feature or bug fix.
-   ```bash
-   git checkout -b feature/YourFeature
-   ```
-3. Make your changes and commit them.
-   ```bash
-   git commit -m "Add your feature"
-   ```
-4. Push to the branch.
-   ```bash
-   git push origin feature/YourFeature
-   ```
-5. Create a pull request detailing your changes.
-
-[User Stories](https://www.notion.so/BotBuddy-117e6a4d98f28032a7bcdaa360823cfb?pvs=4)
+Contributions are welcome! Please fork the repository and submit a pull request.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-- [Discord.py](https://discordpy.readthedocs.io/en/stable/) for Discord bot development.
-- [OpenAI](https://openai.com/) for the ChatGPT integration.
-- [MongoDB](https://www.mongodb.com/) for data storage.
+This project is licensed under the MIT License.
 
 ## Contact
 
-For any inquiries or support, please reach out via [your-email@example.com].
+For any questions or feedback, please contact [marylene.sawyer@gmail.com](mailto:marylene.sawyer@gmail.com).
+
+```
+
+Feel free to modify as needed!
 ```
