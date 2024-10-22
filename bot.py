@@ -15,7 +15,7 @@ CHANNEL_ID = int(os.getenv('CHANNEL_ID'))
 logging.basicConfig(level=logging.INFO)
 
 intents = discord.Intents.default()
-intents.message_content = True  
+intents.message_content = True
 intents.members = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
@@ -25,6 +25,11 @@ client = OpenAI()
 mongo_client = MongoClient(MONGODB_URI)
 db = mongo_client["discord_bot"]
 conversations_collection = db["conversations"]
+
+# MongoDB connection
+# client = MongoClient("your_mongodb_connection_string")
+quotes_db = mongo_client['quotes_db']
+quotes_collection = quotes_db['quotes']
 
 user_ask_mode = {}
 
@@ -99,30 +104,43 @@ async def on_message(message):
         # user_ask_mode[message.author.id] = False
 
 
-# Run the bot
-
-
 # Event that triggers when a member joins the server
 @bot.event
 async def on_member_join(member):
-    print(f"New member joining server: {member.display_name} at {member.joined_at}")
-    
+    print(
+        f"New member joining server: {member.display_name} at {member.joined_at}")
+
     channel = bot.get_channel(CHANNEL_ID)
-    
+
     if channel is None:
         print("Channel not found. Please check the CHANNEL_ID.")
         return
 
     welcome_message = f"Welcome to the server, {member.mention}! 🎉 We're glad to have you here!"
-    
+
     try:
         await channel.send(welcome_message)
-        print(f"Sent welcome message to {member.display_name} in channel {channel.name}.")
-        
+        print(
+            f"Sent welcome message to {member.display_name} in channel {channel.name}.")
+
         # Optionally, send a DM to the new member
         await member.send(f"Hi {member.name}, welcome to our Discord server! Feel free to ask if you need any help.")
     except discord.Forbidden:
         print(f"Couldn't send a DM to {member.name} due to privacy settings.")
     except Exception as e:
         print(f"An error occurred: {e}")
+
+# Command for inspiration
+@bot.command(name="inspire")
+async def inspire(ctx):
+    # Fetch a random quote from the MongoDB collection
+    quote_cursor = quotes_collection.aggregate([{"$sample": {"size": 1}}])
+     
+    quote_document = next(quote_cursor, None)
+
+    if quote_document:
+        await ctx.send(f'"{quote_document["text"]}" - {quote_document["author"]}')
+    else:
+        await ctx.send("Sorry, I couldn't find any quotes.")
+
 bot.run(DISCORD_TOKEN)

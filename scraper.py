@@ -1,5 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
+from pymongo import MongoClient
 
 def scrape_quotes():
     quotes = []
@@ -12,7 +13,8 @@ def scrape_quotes():
         for quote in soup.find_all('div', class_='quote'):
             text = quote.find('span', class_='text').get_text()
             author = quote.find('small', class_='author').get_text()
-            tags = [tag.get_text() for tag in quote.find_all('a', class_='tag')]
+            tags = [tag.get_text()
+                    for tag in quote.find_all('a', class_='tag')]
             quotes.append({
                 'text': text,
                 'author': author,
@@ -21,9 +23,15 @@ def scrape_quotes():
 
     return quotes
 
+
+def save_to_mongo(quotes):
+    client = MongoClient('mongodb://localhost:27017/')
+    db = client.quotes_db
+    collection = db.quotes
+    collection.insert_many(quotes)
+
+
 if __name__ == "__main__":
     quotes = scrape_quotes()
-    for quote in quotes:
-        print(f"{quote['text']} - {quote['author']}")
-        print(f"Tags: {', '.join(quote['tags'])}")
-        print()
+    save_to_mongo(quotes)
+    print("Quotes saved to MongoDB.")
