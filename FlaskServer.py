@@ -24,7 +24,11 @@ class FlaskServer:
                 member = discord.utils.find(lambda m: m.name == donor_name, guild.members)
 
                 if member:
-                    role = guild.get_role(self.role_id)
+                    role = discord.utils.get(guild.roles, name="Donor")
+
+                    if role is None:
+                        # Create the role if it doesn't exist
+                        role = await guild.create_role(name="Donor", permissions=discord.Permissions(send_messages=True))
                     if role not in member.roles:
                         await member.add_roles(role)
                         print(f"Assigned role to {member.name}")
