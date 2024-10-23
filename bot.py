@@ -3,57 +3,69 @@ from discord.ext import commands
 import logging
 import os
 from dotenv import load_dotenv
-from openai import OpenAI
 from pymongo import MongoClient
+from openai import OpenAI
+import asyncio
+import threading
+from FlaskServer import FlaskServer
 
 load_dotenv()
 
-DISCORD_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
+# Environment Variables
+DISCORD_BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 MONGODB_URI = os.getenv("MONGODB_URI")
 CHANNEL_ID = int(os.getenv('CHANNEL_ID'))
+PREMIER_CHANNEL_ID = int(os.getenv('PREMIER_CHANNEL_ID'))
+ROLE_ID = int(os.getenv('ROLE_ID'))
+GUILD_ID = int(os.getenv('GUILD_ID'))
 
+# Logging setup
 logging.basicConfig(level=logging.INFO)
 
+# Discord bot setup with intents
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
-
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-client = OpenAI()
-
+# MongoDB setup
 mongo_client = MongoClient(MONGODB_URI)
 db = mongo_client["discord_bot"]
 conversations_collection = db["conversations"]
+quotes_collection = mongo_client['quotes_db']['quotes']
+client = OpenAI()
 
-# MongoDB connection
-# client = MongoClient("your_mongodb_connection_string")
-quotes_db = mongo_client['quotes_db']
-quotes_collection = quotes_db['quotes']
-
-user_ask_mode = {}
-
-
-# Event when the bot is ready
 @bot.event
 async def on_ready():
-    print(f"We have logged in as {bot.user}")
+    print(f'{bot.user} has connected to Discord!')
 
+@bot.event
+async def on_member_join(member):
+    channel = bot.get_channel(CHANNEL_ID)
+    if channel:
+        welcome_message = f"Welcome to the server, {member.mention}! 🎉 We're glad to have you here!"
+        await channel.send(welcome_message)
+        await member.send(f"Hi {member.name}, welcome to our Discord server! Feel free to ask if you need any help.")
 
-# Define a ping command
+@bot.command(name="inspire")
+async def inspire(ctx):
+    quote_cursor = quotes_collection.aggregate([{"$sample": {"size": 1}}])
+    quote_document = next(quote_cursor, None)
+    if quote_document:
+        await ctx.send(f'"{quote_document["text"]}" - {quote_document["author"]}')
+    else:
+        await ctx.send("Sorry, I couldn't find any quotes.")
+
 @bot.command(name="ping")
 async def ping(ctx):
-    # Send a message with the bot's latency
     await ctx.send(f"Pong! Latency is {round(bot.latency * 1000)}ms")
 
-
-# Define a hello command
 @bot.command(name="hello")
 async def hello(ctx):
     await ctx.send("Hello!")
 
+user_ask_mode = {}
 
-# Define the 'ask' command
 @bot.command(name="ask")
 async def ask(ctx):
     user_ask_mode[ctx.author.id] = True
@@ -62,8 +74,6 @@ async def ask(ctx):
     )
     await ctx.send("Fire away!")
 
-
-# Handle messages
 @bot.event
 async def on_message(message):
     if message.author == bot.user:
@@ -100,47 +110,10 @@ async def on_message(message):
                 "$set": {"messages": conversation_history}}
         )
 
-        # Optionally, clear the ask mode
-        # user_ask_mode[message.author.id] = False
+async def main():
+    flask_server = FlaskServer(bot, GUILD_ID, ROLE_ID, PREMIER_CHANNEL_ID)
+    threading.Thread(target=flask_server.run).start()
+    await bot.start(DISCORD_BOT_TOKEN)
 
-
-# Event that triggers when a member joins the server
-@bot.event
-async def on_member_join(member):
-    print(
-        f"New member joining server: {member.display_name} at {member.joined_at}")
-
-    channel = bot.get_channel(CHANNEL_ID)
-
-    if channel is None:
-        print("Channel not found. Please check the CHANNEL_ID.")
-        return
-
-    welcome_message = f"Welcome to the server, {member.mention}! 🎉 We're glad to have you here!"
-
-    try:
-        await channel.send(welcome_message)
-        print(
-            f"Sent welcome message to {member.display_name} in channel {channel.name}.")
-
-        # Optionally, send a DM to the new member
-        await member.send(f"Hi {member.name}, welcome to our Discord server! Feel free to ask if you need any help.")
-    except discord.Forbidden:
-        print(f"Couldn't send a DM to {member.name} due to privacy settings.")
-    except Exception as e:
-        print(f"An error occurred: {e}")
-
-# Command for inspiration
-@bot.command(name="inspire")
-async def inspire(ctx):
-    # Fetch a random quote from the MongoDB collection
-    quote_cursor = quotes_collection.aggregate([{"$sample": {"size": 1}}])
-     
-    quote_document = next(quote_cursor, None)
-
-    if quote_document:
-        await ctx.send(f'"{quote_document["text"]}" - {quote_document["author"]}')
-    else:
-        await ctx.send("Sorry, I couldn't find any quotes.")
-
-bot.run(DISCORD_TOKEN)
+if __name__ == '__main__':
+    asyncio.run(main())
