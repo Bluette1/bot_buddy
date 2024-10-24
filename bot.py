@@ -125,7 +125,6 @@ async def on_message(message):
 default_message = "🎉 Happy New Year, everyone! Let's celebrate together and make this year amazing! 🎆"
 
 
-
 def save_message_to_db(message):
     # Upsert: Insert if not exists, update if exists
     collection.update_one(
@@ -135,12 +134,10 @@ def save_message_to_db(message):
     )
 
 
-
 @bot.command(name='set_newyear_message', help='Set a custom New Year\'s message')
 async def set_newyear_message(ctx, *, message: str):
     save_message_to_db(message)
     await ctx.send(f"New Year's message updated to: {message}")
-
 
 
 @bot.command(name='view_newyear_message', help='View the current New Year\'s message')
@@ -150,11 +147,9 @@ async def view_newyear_message(ctx):
     await ctx.send(f"Current New Year's message: {message}")
 
 
-
 def load_message_from_db():
     message_data = collection.find_one({"_id": "new_year_message"})
     return message_data['message'] if message_data else default_message
-
 
 
 async def check_new_year():

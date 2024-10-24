@@ -17,6 +17,10 @@ def mock_conversations_collection(mocker):
 @pytest.fixture
 def mock_quotes_collection(mocker):
     return mocker.patch('bot.quotes_collection')
+    
+@pytest.fixture
+def mock_collection(mocker):
+    return mocker.patch('bot.collection')
 
 
 def test_load_environment_variables():
@@ -98,3 +102,25 @@ async def test_ask_command(mock_ctx, mock_conversations_collection):
         {"user_id": mock_ctx.author.id}, {"$set": {"messages": []}}, upsert=True
     )
 
+@pytest.mark.asyncio
+async def test_set_newyear_message(mock_ctx, mock_collection):
+    new_year_message = "Happy New Year 2024!"
+    await bot.get_command("set_newyear_message")(mock_ctx, message=new_year_message)
+    mock_ctx.send.assert_called_once_with(f"New Year's message updated to: {new_year_message}")
+    mock_collection.update_one.assert_called_once_with(
+        {"_id": "new_year_message"},
+        {"$set": {"message": new_year_message}},
+        upsert=True
+    )
+
+@pytest.mark.asyncio
+async def test_view_newyear_message(mock_ctx, mock_collection):
+    mock_collection.find_one.return_value = {"message": "Happy New Year, everyone!"}
+    await bot.get_command("view_newyear_message")(mock_ctx)
+    mock_ctx.send.assert_called_once_with("Current New Year's message: Happy New Year, everyone!")
+
+@pytest.mark.asyncio
+async def test_view_newyear_message_default(mock_ctx, mock_collection):
+    mock_collection.find_one.return_value = None
+    await bot.get_command("view_newyear_message")(mock_ctx)
+    mock_ctx.send.assert_called_once_with("Current New Year's message: 🎉 Happy New Year, everyone! Let's celebrate together and make this year amazing! 🎆")
