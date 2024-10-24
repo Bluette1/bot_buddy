@@ -35,7 +35,7 @@ db = mongo_client["discord_bot"]
 conversations_collection = db["conversations"]
 quotes_collection = mongo_client['quotes_db']['quotes']
 # Collection to store the New Year message
-collection = db['new_year_messages']
+message_collection = db['new_year_messages']
 client = OpenAI()
 
 
@@ -127,7 +127,7 @@ default_message = "🎉 Happy New Year, everyone! Let's celebrate together and m
 
 def save_message_to_db(message):
     # Upsert: Insert if not exists, update if exists
-    collection.update_one(
+    message_collection.update_one(
         {"_id": "new_year_message"},  # Use a constant ID for the message
         {"$set": {"message": message}},
         upsert=True
@@ -142,17 +142,18 @@ async def set_newyear_message(ctx, *, message: str):
 
 @bot.command(name='view_newyear_message', help='View the current New Year\'s message')
 async def view_newyear_message(ctx):
-    message_data = collection.find_one({"_id": "new_year_message"})
+    message_data = message_collection.find_one({"_id": "new_year_message"})
     message = message_data['message'] if message_data else default_message
     await ctx.send(f"Current New Year's message: {message}")
 
 
 def load_message_from_db():
-    message_data = collection.find_one({"_id": "new_year_message"})
+    message_data = message_collection.find_one({"_id": "new_year_message"})
     return message_data['message'] if message_data else default_message
 
 
 async def check_new_year():
+
     await bot.wait_until_ready()  # Ensure the bot is ready before starting the loop
     while not bot.is_closed():
         now = datetime.now()
