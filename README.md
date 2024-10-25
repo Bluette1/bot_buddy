@@ -97,6 +97,11 @@ A versatile Discord bot designed to enhance server experiences with a variety of
    python bot.py
    ```
 
+5. Run tests:
+   ```bash
+   PYTHONPATH=./ pytest tests/test_bot.py
+   ```
+
 ## Usage
 
 Add BotBuddy to your Discord server using the invite link. Use commands to interact with the bot, such as:
