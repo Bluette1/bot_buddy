@@ -25,7 +25,7 @@ def mock_quotes_collection(mocker):
 
 @pytest.fixture
 def mock_collection(mocker):
-    return mocker.patch('bot.message_collection')
+    return mocker.patch('bot.messages_collection')
 
 
 def test_load_environment_variables():

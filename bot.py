@@ -35,7 +35,7 @@ db = mongo_client["discord_bot"]
 conversations_collection = db["conversations"]
 quotes_collection = mongo_client['quotes_db']['quotes']
 # Collection to store the New Year message
-message_collection = db['new_year_messages']
+messages_collection = db['messages']
 client = OpenAI()
 
 
@@ -45,12 +45,42 @@ async def on_ready():
     bot.loop.create_task(check_new_year())  # Start the New Year check task
 
 
+def save_message_to_db(message_id, message):
+    # Upsert: Insert if not exists, update if exists
+    messages_collection.update_one(
+        {"_id": message_id},
+        {"$set": {"message": message}},
+        upsert=True
+    )
+
+
+
+@bot.command(name='set_welcome_message', help='Set a custom welcome message for new members')
+@commands.has_permissions(administrator=True)  # Restrict to Admins
+async def set_welcome_message(ctx, *, message: str):
+    guild_id = ctx.guild.id
+    message_id = f"welcome_message_{guild_id}"
+    save_message_to_db(message_id, message)
+    await ctx.send(f"Welcome message updated to: {message}")
+
+@bot.command(name='view_welcome_message', help='View the current welcome message')
+async def view_welcome_message(ctx):
+    guild_id = ctx.guild.id
+    message_id = f"welcome_message_{guild_id}"
+    message_data = messages_collection.find_one({"_id": message_id})
+    message = message_data['message'] if message_data else "Welcome to the server! 🎉"
+    await ctx.send(f"Current welcome message: {message}")
+
 @bot.event
 async def on_member_join(member):
-    channel = bot.get_channel(CHANNEL_ID)
-    if channel:
-        welcome_message = f"Welcome to the server, {member.mention}! 🎉 We're glad to have you here!"
-        await channel.send(welcome_message)
+    guild_id = member.guild.id
+    message_id = f"welcome_message_{guild_id}"
+    welcome_message_data = messages_collection.find_one({"_id": message_id})
+    welcome_message = welcome_message_data['message'] if welcome_message_data else f"Welcome to the server, {member.mention}! 🎉 We're glad to have you here!"
+
+    general_channel = discord.utils.get(member.guild.text_channels, name="general")
+    if general_channel:
+        await general_channel.send(welcome_message)
         await member.send(f"Hi {member.name}, welcome to our Discord server! Feel free to ask if you need any help.")
 
 
@@ -125,30 +155,28 @@ async def on_message(message):
 default_message = "🎉 Happy New Year, everyone! Let's celebrate together and make this year amazing! 🎆"
 
 
-def save_message_to_db(message):
-    # Upsert: Insert if not exists, update if exists
-    message_collection.update_one(
-        {"_id": "new_year_message"},  # Use a constant ID for the message
-        {"$set": {"message": message}},
-        upsert=True
-    )
-
-
 @bot.command(name='set_newyear_message', help='Set a custom New Year\'s message')
+@commands.has_role('Admin')
 async def set_newyear_message(ctx, *, message: str):
-    save_message_to_db(message)
+    save_message_to_db("new_year_message", message)
     await ctx.send(f"New Year's message updated to: {message}")
+
+
+@set_newyear_message.error
+async def set_newyear_message_error(ctx, error):
+    if isinstance(error, commands.MissingRole):
+        await ctx.send("You don't have permission to set the New Year's message.")
 
 
 @bot.command(name='view_newyear_message', help='View the current New Year\'s message')
 async def view_newyear_message(ctx):
-    message_data = message_collection.find_one({"_id": "new_year_message"})
+    message_data = messages_collection.find_one({"_id": "new_year_message"})
     message = message_data['message'] if message_data else default_message
     await ctx.send(f"Current New Year's message: {message}")
 
 
 def load_message_from_db():
-    message_data = message_collection.find_one({"_id": "new_year_message"})
+    message_data = messages_collection.find_one({"_id": "new_year_message"})
     return message_data['message'] if message_data else default_message
 
 
@@ -158,7 +186,8 @@ async def check_new_year():
     while not bot.is_closed():
         now = datetime.now()
         # Check if it's January 1st, 00:00
-        if now.month == 1 and now.day == 1 and now.hour == 0:
+        # if now.month == 1 and now.day == 1 and now.hour == 0:
+        if now.month == 10 and now.day == 25 and now.hour == 23:
             # Load the custom message from MongoDB
             new_year_message = load_message_from_db()
             # Send the message to a specific channel
