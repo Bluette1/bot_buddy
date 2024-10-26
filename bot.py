@@ -63,6 +63,11 @@ async def set_welcome_message(ctx, *, message: str):
     save_message_to_db(message_id, message)
     await ctx.send(f"Welcome message updated to: {message}")
 
+@set_welcome_message.error
+async def set_welcome_message_error(ctx, error):
+    if isinstance(error, commands.MissingPermissions):
+        await ctx.send("You do not have the correct permissions to use this command.")
+
 @bot.command(name='view_welcome_message', help='View the current welcome message')
 async def view_welcome_message(ctx):
     guild_id = ctx.guild.id
