@@ -56,7 +56,7 @@ def save_message_to_db(message_id, message):
 
 
 @bot.command(name='set_welcome_message', help='Set a custom welcome message for new members')
-@commands.has_permissions(administrator=True)  # Restrict to Admins
+@commands.has_permissions(administrator=True)
 async def set_welcome_message(ctx, *, message: str):
     guild_id = ctx.guild.id
     message_id = f"welcome_message_{guild_id}"
@@ -156,16 +156,10 @@ default_message = "🎉 Happy New Year, everyone! Let's celebrate together and m
 
 
 @bot.command(name='set_newyear_message', help='Set a custom New Year\'s message')
-@commands.has_role('Admin')
+@commands.has_permissions(administrator=True)
 async def set_newyear_message(ctx, *, message: str):
     save_message_to_db("new_year_message", message)
     await ctx.send(f"New Year's message updated to: {message}")
-
-
-@set_newyear_message.error
-async def set_newyear_message_error(ctx, error):
-    if isinstance(error, commands.MissingRole):
-        await ctx.send("You don't have permission to set the New Year's message.")
 
 
 @bot.command(name='view_newyear_message', help='View the current New Year\'s message')
