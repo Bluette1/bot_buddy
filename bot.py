@@ -202,7 +202,7 @@ async def check_new_year():
 
 
 async def main():
-    flask_server = FlaskServer(bot, GUILD_ID, ROLE_ID, PREMIER_CHANNEL_ID)
+    flask_server = FlaskServer(bot)
     threading.Thread(target=flask_server.run).start()
     await bot.start(DISCORD_BOT_TOKEN)
 

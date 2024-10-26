@@ -1,16 +1,14 @@
-
+# FlaskServer to handle Ko-Fi Webhook
 from flask import Flask, request, jsonify
 import os
 import discord
 
-
 class FlaskServer:
-    def __init__(self, bot, guild_id, role_id, premier_channel_id):
+    def __init__(self, bot, role_name='Donor', premier_channel_name="premier"):
         self.app = Flask(__name__)
         self.bot = bot
-        self.guild_id = guild_id
-        self.role_id = role_id
-        self.premier_channel_id = premier_channel_id
+        self.role_name = role_name      # Store role name
+        self.premier_channel_name = premier_channel_name  # Channel name to look for/create
         self.setup_routes()
 
     def setup_routes(self):
@@ -27,23 +25,33 @@ class FlaskServer:
             return jsonify({'status': 'success'}), 200
 
     async def process_donation(self, donor_name, amount, message):
-        guild = self.bot.get_guild(self.guild_id)
-        member = discord.utils.find(
-            lambda m: m.name == donor_name, guild.members)
+        # Look for the member in all guilds the bot is part of
+        for guild in self.bot.guilds:
+            # Try to find a member with the given donor name
+            member = discord.utils.get(guild.members, name=donor_name)  # Fetch the member using their name
+            if member:
+                # Find the role by name
+                role = discord.utils.get(guild.roles, name=self.role_name)
 
-        if member:
-            role = discord.utils.get(guild.roles, name="Donor")
+                if role is None:
+                    # Create the role if it doesn't exist
+                    role = await guild.create_role(name=self.role_name, permissions=discord.Permissions(send_messages=True))
 
-            if role is None:
-                # Create the role if it doesn't exist
-                role = await guild.create_role(name="Donor", permissions=discord.Permissions(send_messages=True))
-            if role not in member.roles:
-                await member.add_roles(role)
-                print(f"Assigned role to {member.name}")
+                if role not in member.roles:
+                    await member.add_roles(role)
+                    print(f"Assigned role to {member.name} in guild {guild.name}.")
 
-        channel = self.bot.get_channel(self.premier_channel_id)
-        if channel:
-            await channel.send(f"🎉 **{donor_name}** just donated **${amount}** on Ko-Fi! {message}")
+                # Look for a channel with the specified name
+                channel = discord.utils.get(guild.channels, name=self.premier_channel_name)
+                # If the channel doesn't exist, create it
+                if channel is None:
+                    channel = await guild.create_text_channel(self.premier_channel_name)
+
+                # Send the donation message to the channel
+                await channel.send(f"🎉 **{donor_name}** just donated **${amount}** on Ko-Fi! {message}")
+                return  # Exit after processing donation for the member
+
+        print(f"Member with name {donor_name} not found in any guild.")
 
     def run(self):
         print("Starting Flask server...")
