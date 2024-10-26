@@ -1,10 +1,23 @@
 import os
 import pytest
 from unittest.mock import AsyncMock, patch
-from bot import bot, check_new_year
 from datetime import datetime
 from discord.ext.commands import Context, Bot, MissingPermissions
 from discord import Intents, Member, TextChannel
+from bot import (
+    set_welcome_message,
+    view_welcome_message,
+    view_newyear_message,
+    set_newyear_message,
+    on_member_join,
+    ping,
+    hello,
+    ask,
+    inspire,
+    set_welcome_message_error,
+    set_newyear_message_error,
+    check_new_year
+)
 
 
 @pytest.fixture
@@ -21,16 +34,6 @@ def mock_quotes_collection(mocker):
 def mock_messages_collection(mocker):
     return mocker.patch('bot.messages_collection')
 
-
-# Import the commands from your bot file
-from bot import (
-    set_welcome_message,
-    view_welcome_message,
-    on_member_join,
-    ping,
-    hello,
-    set_welcome_message_error
-)
 
 @pytest.fixture
 def mock_bot():
@@ -50,23 +53,23 @@ def mock_ctx(mocker, mock_bot):
     ctx.message = mocker.Mock()
     return ctx
 
+
+def test_load_environment_variables():
+    assert os.getenv("DISCORD_BOT_TOKEN") is not None, "DISCORD_TOKEN should not be None"
+    assert os.getenv("MONGODB_URI") is not None, "MONGODB_URI should not be None"
+
 @pytest.mark.asyncio
 async def test_set_welcome_message_without_permissions(mock_ctx):
-    # Simulate a user without administrator permissions
     mock_ctx.author.guild_permissions.administrator = False
     
-    # Create a MissingPermissions error
     error = MissingPermissions(['administrator'])
     
-    # Test the error handler directly
     await set_welcome_message_error(mock_ctx, error)
     
-    # Check if the correct error message was sent
     mock_ctx.send.assert_called_once_with("You do not have the correct permissions to use this command.")
 
 @pytest.mark.asyncio
 async def test_set_welcome_message_with_permissions(mock_ctx):
-    # Simulate a user with administrator permissions
     mock_ctx.author.guild_permissions.administrator = True
     
     with patch('bot.messages_collection') as mock_messages_collection:
@@ -78,6 +81,7 @@ async def test_set_welcome_message_with_permissions(mock_ctx):
             upsert=True
         )
         mock_ctx.send.assert_called_once_with("Welcome message updated to: Welcome!")
+
 
 @pytest.mark.asyncio
 async def test_view_welcome_message_with_existing_message(mock_ctx):
@@ -91,6 +95,7 @@ async def test_view_welcome_message_with_existing_message(mock_ctx):
         )
         mock_ctx.send.assert_called_once_with("Current welcome message: Custom Welcome!")
 
+
 @pytest.mark.asyncio
 async def test_view_welcome_message_without_existing_message(mock_ctx):
     with patch('bot.messages_collection') as mock_messages_collection:
@@ -99,6 +104,7 @@ async def test_view_welcome_message_without_existing_message(mock_ctx):
         await view_welcome_message(mock_ctx)
         
         mock_ctx.send.assert_called_once_with("Current welcome message: Welcome to the server! 🎉")
+
 
 @pytest.mark.asyncio
 async def test_on_member_join(mocker):
@@ -126,102 +132,111 @@ async def test_on_member_join(mocker):
             )
 
 
-
-def test_load_environment_variables():
-    assert os.getenv("DISCORD_BOT_TOKEN") is not None, "DISCORD_TOKEN should not be None"
-    assert os.getenv("MONGODB_URI") is not None, "MONGODB_URI should not be None"
-
-
 @pytest.mark.asyncio
 async def test_ping_command(mock_ctx, mocker):
-    # Mock the latency attribute by creating a mock bot
     mock_bot = mocker.patch("bot.bot", autospec=True)
-    mock_bot.latency = 0.123  # Set a realistic latency value for testing
+    mock_bot.latency = 0.123
 
-    # Call the ping command
-    await bot.get_command("ping")(mock_ctx)
+    await ping(mock_ctx)
 
-    # Assert the send method was called with the correct message
     mock_ctx.send.assert_called_once()
     assert "Pong! Latency is 123ms" in mock_ctx.send.call_args[0][0]
 
 
 @pytest.mark.asyncio
 async def test_hello_command(mock_ctx):
-    # Call the hello command
-    await bot.get_command("hello")(mock_ctx)
-
-    # Assert the send method was called with the correct message
+    await hello(mock_ctx)
     mock_ctx.send.assert_called_once_with("Hello!")
 
 
 @pytest.mark.asyncio
 async def test_inspire_command(mock_ctx, mock_quotes_collection):
-    # Setup a mock quote
     mock_quotes_collection.aggregate.return_value = iter(
         [{"text": "Stay positive.", "author": "Anonymous"}])
 
-    # Call the inspire command
-    await bot.get_command("inspire")(mock_ctx)
+    await inspire(mock_ctx)
 
-    # Check if the correct message was sent
     mock_ctx.send.assert_called_once_with('"Stay positive." - Anonymous')
 
 
 @pytest.mark.asyncio
 async def test_inspire_command_no_quotes(mock_ctx, mock_quotes_collection):
-    # Setup no quotes
     mock_quotes_collection.aggregate.return_value = iter([])
 
-    # Call the inspire command
-    await bot.get_command("inspire")(mock_ctx)
+    await inspire(mock_ctx)
 
-    # Check if the fallback message was sent
     mock_ctx.send.assert_called_once_with("Sorry, I couldn't find any quotes.")
 
 
 @pytest.mark.asyncio
 async def test_ask_command(mock_ctx, mock_conversations_collection):
-    # Call the ask command
-    await bot.get_command("ask")(mock_ctx)
+    await ask(mock_ctx)
 
-    # Check if the correct message was sent
     mock_ctx.send.assert_called_once_with("Fire away!")
 
-    # Check that the conversation was initialized in the database
     mock_conversations_collection.update_one.assert_called_once_with(
         {"user_id": mock_ctx.author.id}, {"$set": {"messages": []}}, upsert=True
     )
 
 
 @pytest.mark.asyncio
-async def test_set_newyear_message(mock_ctx, mock_messages_collection):
-    new_year_message = "Happy New Year 2024!"
-    await bot.get_command("set_newyear_message")(mock_ctx, message=new_year_message)
-    mock_ctx.send.assert_called_once_with(
-        f"New Year's message updated to: {new_year_message}")
-    mock_messages_collection.update_one.assert_called_once_with(
-        {"_id": "new_year_message"},
-        {"$set": {"message": new_year_message}},
-        upsert=True
-    )
+async def test_set_newyear_message_with_permissions(mock_ctx):
+    mock_ctx.author.guild_permissions.administrator = True
+    
+    with patch('bot.messages_collection') as mock_messages_collection:
+        await set_newyear_message(mock_ctx, message="Happy New Year 2025!")
+        
+        mock_messages_collection.update_one.assert_called_once_with(
+            {"_id": f"new_year_message_{mock_ctx.guild.id}"},
+            {"$set": {"message": "Happy New Year 2025!"}},
+            upsert=True
+        )
+        mock_ctx.send.assert_called_once_with("New Year's message updated to: Happy New Year 2025!")
 
 
 @pytest.mark.asyncio
-async def test_view_newyear_message(mock_ctx, mock_messages_collection):
-    mock_messages_collection.find_one.return_value = {
-        "message": "Happy New Year, everyone!"}
-    await bot.get_command("view_newyear_message")(mock_ctx)
-    mock_ctx.send.assert_called_once_with(
-        "Current New Year's message: Happy New Year, everyone!")
+async def test_set_newyear_message_without_permissions(mock_ctx):
+    mock_ctx.author.guild_permissions.administrator = False
+    
+    # Create a MissingPermissions error
+    error = MissingPermissions(['administrator'])
+    
+    # Test the error handler directly
+    await set_newyear_message_error(mock_ctx, error)
+    
+    # Check if the correct error message was sent
+    mock_ctx.send.assert_called_once_with("You do not have the correct permissions to use this command.")
+
+@pytest.mark.asyncio
+async def test_view_newyear_message_with_custom_message(mock_ctx):
+    with patch('bot.messages_collection') as mock_messages_collection:
+        mock_messages_collection.find_one.return_value = {
+            "message": "Happy New Year, everyone!"
+        }
+        
+        await view_newyear_message(mock_ctx)
+        
+        mock_messages_collection.find_one.assert_called_once_with(
+            {"_id": f"new_year_message_{mock_ctx.guild.id}"}
+        )
+        mock_ctx.send.assert_called_once_with(
+            "Current New Year's message: Happy New Year, everyone!"
+        )
 
 
 @pytest.mark.asyncio
-async def test_view_newyear_message_default(mock_ctx, mock_messages_collection):
-    mock_messages_collection.find_one.return_value = None
-    await bot.get_command("view_newyear_message")(mock_ctx)
-    mock_ctx.send.assert_called_once_with(
-        "Current New Year's message: 🎉 Happy New Year, everyone! Let's celebrate together and make this year amazing! 🎆")
+async def test_view_newyear_message_with_default_message(mock_ctx):
+    with patch('bot.messages_collection') as mock_messages_collection:
+        mock_messages_collection.find_one.return_value = None
+        
+        await view_newyear_message(mock_ctx)
+        
+        mock_messages_collection.find_one.assert_called_once_with(
+            {"_id": f"new_year_message_{mock_ctx.guild.id}"}
+        )
+        mock_ctx.send.assert_called_once_with(
+            "Current New Year's message: 🎉 Happy New Year, everyone! Let's celebrate together and make this year amazing! 🎆"
+        )
 
 
 @pytest.mark.skip(reason='Breaking: To Be Fixed Later')

@@ -163,13 +163,22 @@ default_message = "🎉 Happy New Year, everyone! Let's celebrate together and m
 @bot.command(name='set_newyear_message', help='Set a custom New Year\'s message')
 @commands.has_permissions(administrator=True)
 async def set_newyear_message(ctx, *, message: str):
-    save_message_to_db("new_year_message", message)
+    guild_id = ctx.guild.id
+    message_id = f"new_year_message_{guild_id}"
+    save_message_to_db(message_id, message)
     await ctx.send(f"New Year's message updated to: {message}")
+
+@set_newyear_message.error
+async def set_newyear_message_error(ctx, error):
+    if isinstance(error, commands.MissingPermissions):
+        await ctx.send("You do not have the correct permissions to use this command.")
 
 
 @bot.command(name='view_newyear_message', help='View the current New Year\'s message')
 async def view_newyear_message(ctx):
-    message_data = messages_collection.find_one({"_id": "new_year_message"})
+    guild_id = ctx.guild.id
+    message_id = f"new_year_message_{guild_id}"
+    message_data = messages_collection.find_one({"_id": message_id})
     message = message_data['message'] if message_data else default_message
     await ctx.send(f"Current New Year's message: {message}")
 
