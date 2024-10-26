@@ -15,10 +15,6 @@ load_dotenv()
 # Environment Variables
 DISCORD_BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 MONGODB_URI = os.getenv("MONGODB_URI")
-CHANNEL_ID = int(os.getenv('CHANNEL_ID'))
-PREMIER_CHANNEL_ID = int(os.getenv('PREMIER_CHANNEL_ID'))
-ROLE_ID = int(os.getenv('ROLE_ID'))
-GUILD_ID = int(os.getenv('GUILD_ID'))
 
 # Logging setup
 logging.basicConfig(level=logging.INFO)

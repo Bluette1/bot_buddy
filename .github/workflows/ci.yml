@@ -17,13 +17,9 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      CHANNEL_ID: ${{ secrets.CHANNEL_ID }}  
       DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       MONGODB_URI: ${{ secrets.MONGODB_URI }}
-      PREMIER_CHANNEL_ID: ${{ secrets.PREMIER_CHANNEL_ID }}
-      GUILD_ID: ${{ secrets.GUILD_ID }}
-      ROLE_ID: ${{ secrets.ROLE_ID }}
 
     steps:
     - name: Checkout code
