@@ -239,41 +239,55 @@ async def test_view_newyear_message_with_default_message(mock_ctx):
         )
 
 
-@pytest.mark.skip(reason='Breaking: To Be Fixed Later')
+@pytest.mark.asyncio
 async def test_check_new_year_message_sent(mocker, mock_messages_collection):
     mock_channel = mocker.Mock()
     mock_channel.name = "general"
     mock_channel.send = AsyncMock()
 
-    with patch('discord.utils.get', return_value=mock_channel), \
-            patch('bot.datetime') as mock_datetime, \
-            patch('bot.bot.wait_until_ready', new_callable=AsyncMock), \
-            patch('bot.asyncio.sleep', new_callable=AsyncMock), \
-            patch('bot.bot.is_closed', return_value=True), \
-            patch('bot.load_message_from_db', return_value="Happy New Year!"):
+    mock_bot = mocker.Mock()
+    mock_bot.get_all_channels.return_value = [mock_channel]
+    mock_bot.wait_until_ready = AsyncMock()
+    mock_bot.is_closed.return_value = False
 
+    with patch('bot.bot', mock_bot), \
+            patch('bot.datetime') as mock_datetime, \
+            patch('bot.asyncio.sleep', new_callable=AsyncMock) as mock_sleep:
+
+        # Set up mock to return True first time, False second time
+        mock_bot.is_closed.side_effect = [False, True]
         mock_datetime.now.return_value = datetime(2024, 1, 1, 0, 0, 0)
+        
+        # Mock the message loading
+        mock_messages_collection.find_one.return_value = {"message": "Happy New Year!"}
 
         await check_new_year()
 
         mock_channel.send.assert_called_once_with("Happy New Year!")
+        mock_sleep.assert_called_once_with(3600)
 
 
-@pytest.mark.skip(reason='Not Working: To Be Fixed Later')
-async def test_check_new_year_no_message(mocker, mock_messages_collection):
+@pytest.mark.asyncio
+async def test_check_new_year_no_message(mocker):
     mock_channel = mocker.Mock()
     mock_channel.name = "general"
     mock_channel.send = AsyncMock()
 
-    with patch('discord.utils.get', return_value=mock_channel), \
-            patch('bot.datetime') as mock_datetime, \
-            patch('bot.bot.wait_until_ready', new_callable=AsyncMock), \
-            patch('bot.asyncio.sleep', new_callable=AsyncMock), \
-            patch('bot.bot.is_closed', return_value=True), \
-            patch('bot.load_message_from_db', return_value="Happy New Year!"):
+    mock_bot = mocker.Mock()
+    mock_bot.get_all_channels.return_value = [mock_channel]
+    mock_bot.wait_until_ready = AsyncMock()
+    mock_bot.is_closed.return_value = False
 
+    with patch('bot.bot', mock_bot), \
+            patch('bot.datetime') as mock_datetime, \
+            patch('bot.asyncio.sleep', new_callable=AsyncMock) as mock_sleep:
+
+        # Set up mock to return True first time, False second time
+        mock_bot.is_closed.side_effect = [False, True]
+        # Set date to non-New Year's time
         mock_datetime.now.return_value = datetime(2024, 2, 1, 0, 0, 0)
 
         await check_new_year()
 
         mock_channel.send.assert_not_called()
+        mock_sleep.assert_called_once_with(3600)

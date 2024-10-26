@@ -190,19 +190,14 @@ def load_message_from_db():
 
 async def check_new_year():
 
-    await bot.wait_until_ready()  # Ensure the bot is ready before starting the loop
+    await bot.wait_until_ready()
     while not bot.is_closed():
         now = datetime.now()
-        # Check if it's January 1st, 00:00
-        # if now.month == 1 and now.day == 1 and now.hour == 0:
-        if now.month == 10 and now.day == 25 and now.hour == 23:
-            # Load the custom message from MongoDB
+        if now.month == 1 and now.day == 1 and now.hour == 0:
             new_year_message = load_message_from_db()
-            # Send the message to a specific channel
             channel = discord.utils.get(bot.get_all_channels(), name="general")
             if channel:
                 await channel.send(new_year_message)
-        # Wait for 1 hour before checking again
         await asyncio.sleep(3600)
 
 
