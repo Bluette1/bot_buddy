@@ -4,7 +4,7 @@ import os
 import discord
 
 class FlaskServer:
-    def __init__(self, bot, role_name='Donor', premier_channel_name="premier"):
+    def __init__(self, bot, role_name='Donor', premier_channel_name="Premier"):
         self.app = Flask(__name__)
         self.bot = bot
         self.role_name = role_name      # Store role name

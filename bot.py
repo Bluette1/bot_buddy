@@ -9,6 +9,8 @@ import asyncio
 import threading
 from datetime import datetime
 from FlaskServer import FlaskServer
+from commands.birthday_commands import BirthdayCommands
+from repositories.birthday_repository import BirthdayRepository
 
 load_dotenv()
 
@@ -32,13 +34,22 @@ conversations_collection = db["conversations"]
 quotes_collection = mongo_client['quotes_db']['quotes']
 # Collection to store the New Year message
 messages_collection = db['messages']
+birthday_collection = db['birthdays']
+
+# Create repository instances
+birthday_repo = BirthdayRepository(birthday_collection)
+
 client = OpenAI()
 
 
 @bot.event
 async def on_ready():
     print(f'{bot.user} has connected to Discord!')
-    bot.loop.create_task(check_new_year())  # Start the New Year check task
+    # bot.loop.create_task(check_new_year())  # Start the New Year check task
+    # check_birthdays.start()
+     # Add the birthday commands cog
+    await bot.add_cog(BirthdayCommands(bot, birthday_repo))
+    bot.loop.create_task(check_new_year())
 
 
 def save_message_to_db(message_id, message):
@@ -195,6 +206,14 @@ async def check_new_year():
             if channel:
                 await channel.send(new_year_message)
         await asyncio.sleep(3600)
+
+
+@bot.event
+async def on_command_error(ctx, error):
+    if isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send('Please provide your birthday date: !setbirthday YYYY-MM-DD')
+    else:
+        await ctx.send(f'An error occurred: {str(error)}')
 
 
 async def main():
