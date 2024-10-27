@@ -10,13 +10,18 @@ def bot(mocker):
 @pytest.fixture
 def app(bot):
     # Mock the bot and its methods
-    mock_bot = AsyncMock()
-    mock_bot.get_guild.return_value = MagicMock()
-    mock_bot.get_channel.return_value = AsyncMock()
+    mock_bot = bot
+    mock_bot.guilds = [MagicMock(id=123, name="Test Guild")]  # Mock a guild for testing
+    mock_bot.guilds[0].get_member = AsyncMock(return_value=MagicMock(id=456, name="TestDonor"))  # Mock the member retrieval
 
     # Instantiate the FlaskServer with mocks
-    flask_server = FlaskServer(mock_bot, guild_id=123, role_id=456, premier_channel_id=789)
+    flask_server = FlaskServer(mock_bot)
     return flask_server.app
+
+@pytest.fixture
+def client(app):
+    with app.test_client() as client:
+        yield client
 
 def test_kofi_webhook(client, bot):
     # Mock data for the webhook
@@ -35,5 +40,5 @@ def test_kofi_webhook(client, bot):
         assert response.status_code == 200
         assert response.json == {'status': 'success'}
 
-        # Verify the process_donation task was called
+        # Verify the process_donation task was called with the correct parameters
         mock_process_donation.assert_called_once_with('TestDonor', '5', 'Keep up the great work!')

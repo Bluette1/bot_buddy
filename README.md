@@ -99,7 +99,7 @@ A versatile Discord bot designed to enhance server experiences with a variety of
 
 5. Run tests:
    ```bash
-   PYTHONPATH=./ pytest tests/test_bot.py
+   PYTHONPATH=./ pytest tests/
    ```
 
 ## Usage
