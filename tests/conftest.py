@@ -13,7 +13,11 @@ from repositories.birthday_repository import BirthdayRepository
 
 @pytest.fixture
 def mock_mongo():
-    client = MongoClient('mongodb://localhost:27017/')
+    mongodb_uri = os.getenv('MONGODB_URI')
+    if not mongodb_uri:
+        raise ValueError("MONGODB_URI environment variable is not set")
+    
+    client = MongoClient(mongodb_uri)
     db = client['test_discord_bot']
     collection = db['test_birthdays']
     collection.delete_many({})

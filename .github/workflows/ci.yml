@@ -16,10 +16,16 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    services:
+      mongodb:
+        image: mongo:4.4
+        ports:
+          - 27017:27017
+
     env:
       DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      MONGODB_URI: ${{ secrets.MONGODB_URI }}
+      MONGODB_URI: mongodb://localhost:27017
 
     steps:
     - name: Checkout code
