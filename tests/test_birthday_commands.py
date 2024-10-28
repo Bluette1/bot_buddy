@@ -2,7 +2,6 @@
 import pytest
 import discord.ext.test as dpytest
 from commands.birthday_commands import BirthdayCommands
-from datetime import datetime
 
 @pytest.mark.asyncio
 async def test_set_birthday_command(setup_bot, birthday_repo):
