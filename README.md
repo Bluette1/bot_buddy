@@ -2,6 +2,10 @@
 
 A versatile Discord bot designed to enhance server experiences with a variety of interactive features, built using Python and `discord.py`.
 
+![BotBuddy Image](./images/screenshot-botbuddy.png)
+
+[Add BotBuddy on Discord](https://discord.com/oauth2/authorize?client_id=1296658070159753377)
+
 ## Features
 
 1. **Bot Setup**
@@ -85,11 +89,9 @@ A versatile Discord bot designed to enhance server experiences with a variety of
 3. Set up your `.env` file with your Discord bot token:
 
    ```env
-   TOKEN=your_discord_bot_token
-   CLIENT_ID=the_discord_client_id
-   BOT_OWNER_ID=owner_discord_id
-   OPENAI_API_KEY=your_open_ai_api_key
-   BOT_ID=bot_id
+   DISCORD_BOT_TOKEN=
+   OPENAI_API_KEY=
+   MONGODB_URI=
    ```
 
 4. Run the bot:
@@ -99,7 +101,7 @@ A versatile Discord bot designed to enhance server experiences with a variety of
 
 5. Run tests:
    ```bash
-   PYTHONPATH=./ pytest tests/
+   pytest tests/
    ```
 
 ## Usage
